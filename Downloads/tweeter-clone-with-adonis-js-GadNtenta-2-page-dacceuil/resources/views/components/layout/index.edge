@@ -1,0 +1,242 @@
+<!-- resources/views/pages/layouts/main.edge -->
+
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{title || "Twitter Clone"}}</title>
+    <!-- Tailwind CSS -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+  </head>
+  <!-- Empêche le scroll sur le body -->
+  <body class="bg-black text-white min-h-screen font-sans overflow-hidden">
+    <!-- Conteneur principal -->
+    <div class="mx-auto max-w-full px-4 overflow-hidden">
+      <div class="grid grid-cols-12">
+        <!-- SIDEBAR GAUCHE -->
+        <aside class="col-span-3 flex flex-col px-4 py-4 border-r border-gray-800">
+          <div class="flex flex-col h-full">
+            <!-- Logo Twitter -->
+            <div>
+              <a href="#" class="inline-block p-2">
+                <img src="./public/Twitter_logo.svg" alt="Icon Twitter" />
+              </a>
+            </div>
+            <!-- Menu principal et Bouton Tweet -->
+            <div class="space-y-4">
+              <nav class="space-y-2">
+                @component('components/lien_menu_aside', {
+                  lien: "/home",
+                  nom_image: "Home.svg",
+                  nom: "Home",
+                  id: "homeLink" 
+                })
+                @endcomponent
+                @component('components/lien_menu_aside', {
+                  lien: "#",
+                  nom_image: "Explorer.svg",
+                  nom: "Explorer",
+                  id: "explorerLink"
+                })
+                @endcomponent
+                @component('components/lien_menu_aside', {
+                  lien: "#",
+                  nom_image: "Notifications.svg",
+                  nom: "Notifications",
+                  id: "notificationsLink"
+                })
+                @endcomponent
+                @component('components/lien_menu_aside', {
+                  lien: "#",
+                  nom_image: "Messages.svg",
+                  nom: "Messages",
+                  id: "messagesLink"
+                })
+                @endcomponent
+                @component('components/lien_menu_aside', {
+                  lien: "#",
+                  nom_image: "Bookmarks.svg",
+                  nom: "Bookmarks",
+                  id: "bookmarksLink"
+                })
+                @endcomponent
+                @component('components/lien_menu_aside', {
+                  lien: "/profile",
+                  nom_image: "Profile.svg",
+                  nom: "Profile",
+                  id: "profileLink"
+                })
+                @endcomponent                
+                @component('components/lien_menu_aside', {
+                  nom_image: "More.svg",
+                  nom: "More",
+                  id: "moreLink"
+                })
+                @endcomponent
+                @component('components/lien_menu_aside', {
+                  lien: "/",
+                  nom_image: "logout.svg",
+                  nom: "Deconnexion",
+                  id: "moreLink"
+                })
+                @endcomponent
+                {{--  @component('components/lien_menu_aside', {
+                  nom_image: "More.svg",
+                  nom: "Connexion",
+                  id: "moreLink"
+                })
+                @endcomponent  --}}
+              </nav>
+              <!-- Bouton Tweet -->
+              <div>
+                <button class="bg-blue-500 text-white w-full font-bold py-3 rounded-full hover:bg-blue-600 transition-colors cursor-pointer">
+                  Tweet
+                </button>
+              </div>
+            </div>
+            <!-- Profile Settings -->
+            <div class="mt-auto">
+              <button class="w-full p-3 rounded-full hover:bg-gray-800 transition-colors flex items-center justify-between cursor-pointer">
+                <div class="flex items-center space-x-3">
+                  <img src="{{ user ? user.profile_photo_url : './public/profile.webp' }}" alt="Profile Photo" class="h-10 w-10 rounded-full" />
+                  <div class="text-left">
+                    <div class="flex items-center space-x-1">
+                      <span class="font-bold">{{ fullName }}</span>
+                      <img src="./public/Private.svg" alt="Private Account" class="h-5 w-5" />
+                    </div>
+                    <span class="text-gray-500 text-sm">@ {{ fullName }}</span>
+                  </div>
+                </div>
+                <img src="./public/Common-More-Button.svg" alt="More Options" class="h-5 w-5" />
+              </button>
+            </div>
+            
+          </div>
+        </aside>
+
+        <!-- CONTENU PRINCIPAL -->
+        <!-- Ici, on fixe la hauteur à l'écran et on autorise le scroll vertical -->
+        <main class="col-span-5 border-r border-gray-800 h-screen overflow-y-auto scrollbar-hide">
+            {{{ await $slots.main() }}}
+        </main>
+
+        <!-- SIDEBAR DROITE -->
+        <aside class="col-span-4 hidden md:block px-4 py-4 space-y-4">
+          <!-- Barre de recherche -->
+          <div class="bg-gray-800 rounded-full p-1">
+            <div class="relative">
+              <input type="text" placeholder="Search Twitter" class="w-full bg-transparent text-white rounded-full py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <img src="./public/Search.svg" alt="icon-search" />
+              </div>
+            </div>
+          </div>
+          <!-- Bloc Tendances -->
+          <div class="bg-gray-800 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-4 w-full border-b border-black pb-2">
+              <h2 class="text-xl font-bold">Trends for you</h2>
+              <img src="./public/Settings.svg" alt="icon-setting" class="h-6 w-6 cursor-pointer" />
+            </div>
+            <ul class="space-y-4">
+              @each(trend in trends)
+              @component('components/trend_for_you_item', {
+                location: trend.location,
+                hastage: trend.hastage,
+                nombre_tweet: trend.nombre_tweet
+              })
+              @endcomponent
+            @endeach
+            </ul>
+            
+            <div class="text-blue-400 hover:underline mt-4 cursor-pointer">
+              Show more
+            </div>
+          </div>
+          <!-- Bloc Who to follow -->
+          <div class="bg-gray-800 rounded-xl p-4">
+            <h2 class="text-xl font-bold mb-4 w-full border-b border-black pb-2">Who to follow</h2>
+            <ul class="space-y-4 text-sm">
+              <li class="flex items-center justify-between cursor-pointer">
+                <div class="flex items-center space-x-3">
+                  <img src="./public/nytimes-avatar.png" alt="NYTimes Avatar" class="h-12 w-12 rounded-full" />
+                  <div>
+                    <div class="flex items-center space-x-1">
+                      <p class="font-bold">The New York Times</p>
+                      <img src="./public/Certified.svg" alt="icon-Certified" class="h-5 w-5" />
+                    </div>
+                    <p class="text-gray-400 text-sm">@nytimes</p>
+                  </div>
+                </div>
+                <button class="follow-btn bg-white text-black rounded-full px-4 py-2 font-semibold hover:bg-gray-200 transition-colors cursor-pointer">
+                  Follow
+                </button>
+              </li>
+              <li class="flex items-center justify-between cursor-pointer">
+                <div class="flex items-center space-x-3">
+                  <img src="./public/cnn-avatar.png" alt="CNN Avatar" class="h-12 w-12 rounded-full" />
+                  <div>
+                    <div class="flex items-center space-x-1">
+                      <p class="font-bold">CNN</p>
+                      <img src="./public/Certified.svg" alt="icon-Certified" class="h-5 w-5" />
+                    </div>
+                    <p class="text-gray-400 text-sm">@CNN</p>
+                  </div>
+                </div>
+                <button class="follow-btn bg-white text-black rounded-full px-4 py-2 font-semibold hover:bg-gray-200 transition-colors cursor-pointer">
+                  Follow
+                </button>
+              </li>
+              <li class="flex items-center justify-between cursor-pointer">
+                <div class="flex items-center space-x-3">
+                  <img src="./public/Twitter.png" alt="Profile Twitter" class="h-12 w-12 rounded-full" />
+                  <div>
+                    <div class="flex items-center space-x-1">
+                      <p class="font-bold">Twitter</p>
+                      <img src="./public/Certified.svg" alt="icon-Certified" class="h-5 w-5" />
+                    </div>
+                    <p class="text-gray-400 text-sm">@Twitter</p>
+                  </div>
+                </div>
+                <button class="follow-btn bg-white text-black rounded-full px-4 py-2 font-semibold hover:bg-gray-200 transition-colors cursor-pointer">
+                  Follow
+                </button>
+              </li>
+            </ul>
+            <div class="text-blue-400 hover:underline mt-4 cursor-pointer">
+              Show more
+            </div>
+          </div>
+          <!-- Liens en bas de page -->
+          <div class="flex">
+            <a class="text-gray-400 text-xs flex-grow" href="#">Terms of Service</a>
+            <a class="text-gray-400 text-xs flex-grow" href="#">Privacy Policy</a>
+            <a class="text-gray-400 text-xs flex-grow" href="#">Cookie Policy</a>
+          </div>
+          <div>
+            <a class="text-gray-400 text-xs flex-grow" href="#">Imprint</a>
+            <a class="text-gray-400 text-xs flex-grow" href="#">Ads info</a>
+            <a class="text-gray-400 text-xs flex-grow" href="#">More...</a>
+            <a class="text-gray-400 text-xs flex-grow" href="#">© 2025 Twitter, Inc</a>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Script JavaScript optimisé -->
+    <script src="js/app.js">
+    document.addEventListener("click", (e) => {
+  const target = e.target.closest("#profileLink");
+  if (target) {
+    e.preventDefault();
+    console.log("profileLink cliqué (via délégation)");
+    const homeSection = document.getElementById("homeSection");
+    const profileSection = document.getElementById("profileSection");
+    homeSection.classList.add("hidden");
+    profileSection.classList.remove("hidden");
+  }
+});
+    </script>
+    
+  </body>
+</html>

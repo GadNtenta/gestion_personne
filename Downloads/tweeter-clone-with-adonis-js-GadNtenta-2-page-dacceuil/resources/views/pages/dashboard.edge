@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | Twitter Clone</title>
+  @vite(['resources/css/app.css'])
+</head>
+<body class="bg-black text-white min-h-screen">
+  <div class="container mx-auto px-4 py-8">
+    <header class="flex justify-between items-center mb-8">
+      <div>
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="w-8 h-8 text-white fill-current">
+          <g>
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path>
+          </g>
+        </svg>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <span>Welcome, {{ auth.user.fullName || auth.user.email }}</span>
+        <form action="{{ route('auth.logout') }}" method="POST">
+          {{ csrfField() }}
+          <button type="submit" class="bg-transparent border border-gray-600 text-white px-4 py-2 rounded-full hover:bg-gray-800 transition">
+            Logout
+          </button>
+        </form>
+      </div>
+    </header>
+    
+    <main>
+      <h1 class="text-3xl font-bold mb-6">Dashboard</h1>
+      <p>You are logged in as {{ auth.user.email }}</p>
+    </main>
+  </div>
+</body>
+</html>
+

@@ -1,0 +1,56 @@
+@layout({
+  title: 'Home',
+  trends: trends,
+  fullName: fullName,
+})
+
+<section id="homeSection" class="space-y-1">
+  <!-- En-tête de la colonne centrale -->
+  <div class="sticky top-0 bg-black p-4 border-b border-gray-700 z-10">
+    <div class="flex justify-between items-center">
+      <h1 class="text-xl font-bold">Home</h1>
+      <img src="./public/Timeline-Prop.svg" alt="Icon-Timeline-Prop" />
+    </div>
+  </div>
+
+  <!-- Zone de rédaction -->
+  <div class="p-4 border-b border-gray-700 flex space-x-3">
+    <img src="{{ user ? user.profilePhotoUrl : './public/profile.webp' }}" alt="Avatar" class="h-12 w-12 rounded-full" />
+    <div class="flex-1">
+      <textarea id="tweetContent" class="w-full bg-transparent focus:outline-none resize-none text-lg" rows="3" placeholder="What's happening?"></textarea>
+      <div id="imagePreviewContainer" class="w-full"></div>
+      <div class="flex justify-between mt-2">
+        <div class="col-span-3 flex space-x-1 cursor-pointer">
+          <img src="./public/Top-Tweets.svg" alt="icon-Top-Tweets" id="fileOpener" style="cursor:pointer;" />
+          <input type="file" id="fileInput" accept="image/*,video/*" style="display:none;" />
+          <img src="./public/Top-Tweets-1.svg" alt="icon-Top-Tweets" />
+          <img src="./public/Top-Tweets-2.svg" alt="icon-Top-Tweets" />
+          <img src="./public/Top-Tweets-3.svg" alt="icon-Top-Tweets" />
+          <img src="./public/Top-Tweets-4.svg" alt="icon-Top-Tweets" />
+        </div>
+        <button id="tweetBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-4 rounded-full cursor-pointer">
+          Tweet
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Affichage des tweets -->
+  <div id="tweetsContainer">
+    @each(tweet in tweets)
+      @component('components/tweet', {
+        id: tweet.id,
+        lien_profile: tweet.user.avatar,
+        username: tweet.user.name,
+        content_post_text: tweet.content,
+        lien_post_media: tweet.mediaUrl,
+        replies: tweet.repliesCount,
+        retweets: tweet.retweetsCount,
+        likes: tweet.likesCount,
+        createdAt: tweet.createdAt
+      })
+      @endcomponent
+    @endeach
+  </div>
+</section>
+@end
