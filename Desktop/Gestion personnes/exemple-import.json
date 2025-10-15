@@ -1,0 +1,33 @@
+[
+  {
+    "nom": "Kabongo",
+    "postnom": "Mukendi",
+    "prenom": "Jean",
+    "sexe": "Masculin"
+  },
+  {
+    "nom": "Tshimanga",
+    "postnom": "Kasongo",
+    "prenom": "Marie",
+    "sexe": "Féminin"
+  },
+  {
+    "nom": "Mbuyi",
+    "postnom": "Kalala",
+    "prenom": "Pierre",
+    "sexe": "Masculin"
+  },
+  {
+    "nom": "Ilunga",
+    "postnom": "Kabamba",
+    "prenom": "Grace",
+    "sexe": "Féminin"
+  },
+  {
+    "nom": "Katanga",
+    "postnom": "Mulumba",
+    "prenom": "Paul",
+    "sexe": "Masculin"
+  }
+]
+

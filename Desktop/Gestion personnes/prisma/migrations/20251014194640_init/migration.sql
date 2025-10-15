@@ -1,0 +1,10 @@
+-- CreateTable
+CREATE TABLE "Person" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "nom" TEXT NOT NULL,
+    "postnom" TEXT NOT NULL,
+    "prenom" TEXT NOT NULL,
+    "sexe" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
+);
