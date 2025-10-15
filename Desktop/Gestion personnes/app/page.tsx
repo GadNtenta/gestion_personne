@@ -1,17 +1,20 @@
 "use client";
 
-import Footer from "@/components/Footer";
-import ImportExportButtons from "@/components/ImportExportButtons";
-import ImportModal from "@/components/ImportModal";
-import PersonForm from "@/components/PersonForm";
-import PersonTable from "@/components/PersonTable";
-import SearchFilters from "@/components/SearchFilters";
-import StatisticsCards from "@/components/StatisticsCards";
-import { ImportValidation, Person, PersonFormData } from "@/types/person";
-import { useEffect, useMemo, useState } from "react";
+import {
+  Footer,
+  ImportExportButtons,
+  ImportModal,
+  PersonForm,
+  PersonTable,
+  SearchFilters,
+  StatisticsCards,
+} from "@/components";
+import { useFilters, useImportExport, usePersons } from "@/hooks";
+import { Person, PersonFormData } from "@/types/person";
+import { useState } from "react";
 
 export default function Home() {
-  const [persons, setPersons] = useState<Person[]>([]);
+  // State local pour le formulaire
   const [formData, setFormData] = useState<PersonFormData>({
     nom: "",
     postnom: "",
@@ -19,61 +22,40 @@ export default function Home() {
     sexe: "",
   });
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sexFilter, setSexFilter] = useState<string>("tous");
-  const [showImportModal, setShowImportModal] = useState(false);
-  const [importData, setImportData] = useState<any>(null);
-  const [importValidation, setImportValidation] =
-    useState<ImportValidation | null>(null);
-  const [importLoading, setImportLoading] = useState(false);
 
-  // Charger les personnes au démarrage
-  useEffect(() => {
-    fetchPersons();
-  }, []);
+  // Hooks personnalisés pour la logique métier
+  const {
+    persons,
+    loading,
+    error,
+    setError,
+    stats,
+    createPerson,
+    updatePerson,
+    deletePerson,
+    refreshPersons,
+  } = usePersons();
 
-  const fetchPersons = async () => {
-    try {
-      const response = await fetch("/api/persons");
-      const data = await response.json();
-      setPersons(data);
-    } catch (err) {
-      setError("Erreur lors du chargement des données");
-    }
-  };
+  const {
+    searchTerm,
+    setSearchTerm,
+    sexFilter,
+    setSexFilter,
+    filteredPersons,
+  } = useFilters(persons);
 
-  // Filtrage et recherche
-  const filteredPersons = useMemo(() => {
-    let filtered = persons;
+  const {
+    showImportModal,
+    importValidation,
+    importLoading,
+    error: importError,
+    handleExport,
+    handleFileSelect,
+    handleConfirmImport,
+    handleCancelImport,
+  } = useImportExport(refreshPersons);
 
-    // Filtre par sexe
-    if (sexFilter !== "tous") {
-      filtered = filtered.filter((person) => person.sexe === sexFilter);
-    }
-
-    // Recherche
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (person) =>
-          person.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          person.postnom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          person.prenom.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    return filtered;
-  }, [persons, searchTerm, sexFilter]);
-
-  // Statistiques
-  const stats = useMemo(() => {
-    const total = persons.length;
-    const masculin = persons.filter((p) => p.sexe === "Masculin").length;
-    const feminin = persons.filter((p) => p.sexe === "Féminin").length;
-    return { total, masculin, feminin };
-  }, [persons]);
-
+  // Gestion du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -89,35 +71,16 @@ export default function Home() {
       return;
     }
 
-    setLoading(true);
+    let success = false;
+    if (editingId) {
+      success = await updatePerson(editingId, formData);
+    } else {
+      success = await createPerson(formData);
+    }
 
-    try {
-      if (editingId) {
-        // Mise à jour
-        await fetch(`/api/persons/${editingId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
-      } else {
-        // Création
-        await fetch("/api/persons", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
-      }
-
-      // Réinitialiser le formulaire
+    if (success) {
       setFormData({ nom: "", postnom: "", prenom: "", sexe: "" });
       setEditingId(null);
-
-      // Recharger la liste
-      await fetchPersons();
-    } catch (err) {
-      setError("Erreur lors de l'enregistrement");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -134,7 +97,6 @@ export default function Home() {
     });
     setEditingId(person.id);
     setError("");
-    // Scroll vers le formulaire
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -142,15 +104,7 @@ export default function Home() {
     if (!confirm("Êtes-vous sûr de vouloir supprimer cette personne ?")) {
       return;
     }
-
-    try {
-      await fetch(`/api/persons/${id}`, {
-        method: "DELETE",
-      });
-      await fetchPersons();
-    } catch (err) {
-      setError("Erreur lors de la suppression");
-    }
+    await deletePerson(id);
   };
 
   const handleCancel = () => {
@@ -159,106 +113,8 @@ export default function Home() {
     setError("");
   };
 
-  // Export des données
-  const handleExport = async () => {
-    try {
-      const response = await fetch("/api/persons/export");
-      const data = await response.json();
-
-      // Créer un blob et télécharger le fichier
-      const blob = new Blob([JSON.stringify(data, null, 2)], {
-        type: "application/json",
-      });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `gestion-personnes-${Date.now()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (err) {
-      setError("Erreur lors de l'exportation");
-    }
-  };
-
-  // Import - Lecture du fichier
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const text = await file.text();
-      const json = JSON.parse(text);
-
-      // Extraire les données (gérer différents formats)
-      let dataToImport = json;
-      if (json.data && Array.isArray(json.data)) {
-        dataToImport = json.data;
-      } else if (!Array.isArray(json)) {
-        throw new Error("Format invalide");
-      }
-
-      setImportData(dataToImport);
-
-      // Valider les données
-      setImportLoading(true);
-      const response = await fetch("/api/persons/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: dataToImport, validate: true }),
-      });
-
-      const validation = await response.json();
-      setImportValidation(validation);
-      setShowImportModal(true);
-    } catch (err) {
-      setError(
-        "Erreur lors de la lecture du fichier. Assurez-vous que c'est un fichier JSON valide."
-      );
-    } finally {
-      setImportLoading(false);
-      // Reset input
-      e.target.value = "";
-    }
-  };
-
-  // Confirmer l'import
-  const handleConfirmImport = async () => {
-    if (!importData) return;
-
-    setImportLoading(true);
-    try {
-      const response = await fetch("/api/persons/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: importData, validate: false }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setShowImportModal(false);
-        setImportData(null);
-        setImportValidation(null);
-        await fetchPersons();
-        // Pas d'erreur, juste fermer
-      } else {
-        setError(result.message || "Erreur lors de l'importation");
-      }
-    } catch (err) {
-      setError("Erreur lors de l'importation");
-    } finally {
-      setImportLoading(false);
-    }
-  };
-
-  // Annuler l'import
-  const handleCancelImport = () => {
-    setShowImportModal(false);
-    setImportData(null);
-    setImportValidation(null);
-  };
+  // Afficher les erreurs d'import ou de gestion des personnes
+  const displayError = error || importError;
 
   return (
     <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
@@ -305,7 +161,7 @@ export default function Home() {
               formData={formData}
               editingId={editingId}
               loading={loading}
-              error={error}
+              error={displayError}
               onSubmit={handleSubmit}
               onChange={handleFormChange}
               onCancel={handleCancel}
